@@ -1,136 +1,267 @@
 <!doctype html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <title>WebRTC p2p data</title>
-    <script src="js/jquery-2.0.0.js"></script>
-    <script src="js/bootstrap.js"></script>
-    <link href="css/bootstrap.css" rel="stylesheet">
-    <link href="css/bootstrap-responsive.css" rel="stylesheet">
-    <link href="css/serverless-webrtc-bootstrap.css" rel="stylesheet">
-</head>
-<body>
-<a href="https://github.com/cjb/serverless-webrtc/"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png" alt="Fork me on GitHub"></a>
-<div class="span4">
-  <Video id="localVideo">
-</div>
-<div class="span4">
-  <Video id="remoteVideo">
-</div>
-<div class="span4">
-  <fieldset class="well">
-    <p class="head muted">
-      Serverless WebRTC chat demonstration.
-    </p>
-    <div class="text-info" id="chatlog" style="height:350px; overflow:auto;">
-    </div>
-  </fieldset>
-  <form class="form-inline" onSubmit="return sendMessage()" action="">
-    <input type="text" id="messageTextBox" placeholder="Type your message here">
-    <button type="submit" id="sendMessageBtn" class="btn">Send message</button>
-  </form>
-  <input type="file" id="fileBtn">
-  <div id="dr-div">
-</div>
+    <head>
+        <meta charset="utf-8">
+        <title>WebRTC p2p data</title>
+        <script src="js/jquery-2.0.0.js"></script>
+        <script src="js/bootstrap.js"></script>
+        <link href="css/bootstrap.css" rel="stylesheet">
+        <link href="css/bootstrap-responsive.css" rel="stylesheet">
+        <link href="css/serverless-webrtc-bootstrap.css" rel="stylesheet">
+        <style>
+         @font-face {
+             font-family: Publik;
+             src: url(DRPublik-Regular.woff2);
+         }
+         @font-face {
+             font-family: Publik;
+             src: url(DRPublik-Bold.woff2);
+             font-weight: bold;
+         }
+         .hide {
+             display: none;
+         }
 
-<div class="modal" id="showLocalOffer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-  <div class="modal-header">
-    <h3 id="myModalLabel">Forbind til kameraet</h3>
-  </div>
-  <div class="modal-body">
-      Her er dit "tilbud" -- det fortæller kameraet hvordan det forbinder til dig. Send det hele til kameraet, f.eks. via facebook, reppio eller email.
-      <br>
-      NB: det kan tage op til et minut før tilbuddet kommer frem.
-      <br>
-    Here's your "offer" -- it tells someone else how to connect to you.  Send the whole thing to them, for example in an instant message or e-mail.
-  <br/>
-  <textarea class="input-large" id="localOffer" name="localOffer" rows="10" cols="100"></textarea>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-primary" id="offerSentBtn" data-dismiss="modal" aria-hidden="true">Okay, det er sendt.</button>
-  </div>
-</div>
+         item {
+             display: block;
+         }
+         drtitle {
+             font-family: Publik,Gibson,gibsonRegular,Arial,sans-serif;
+             font-weight: bold;
+             display: block;
+         }
+         .overst {
+             margin-top: 2em;
+             margin-bottom: 1.3em;
+             display: block;
+         }
+         .overst ul {
+             margin-bottom: 1.3em;
+         }
+         .overst a {
+             font-family: Publik;
+             font-weight: normal;
+             color: black;
+             font-size: 1rem;
+             margin: 1em;
+             margin-top: 5em;
+         }
+         .overst a.current {
+             font-family: Publik;
+             color: black;
+             font-weight: bold;
+             padding-bottom: 1em;
+             border-bottom-width: 0.3em;
+             border-bottom-style: solid;
+         }
+         .overst .overskrift {
+             font-family: Publik;
+             font-weight: bold;
+             font-size: 3.75rem;
+             background-color: #FF001E;
+             color: white;
+             padding: 1em;
+         }
 
-<div class="modal" id="showLocalAnswer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-  <div class="modal-header">
-    <h3 id="myModalLabel">Forbind til skærmen</h3>
-  </div>
-  <div class="modal-body">
-      Her er dit "svar" -- det fortæller skærmen hvordan den forbinder til dig. Send det hele til skærmen, f.eks. via facebook, reppio eller email.
-      <br>
-      NB: det kan tage op til et minut før svaret kommer frem.
-      <br>
-    Here's your "answer" -- it tells someone else how to connect to you.  Send the whole thing to them, for example in an instant message or e-mail.
-  <br/>
-  <textarea class="input-large" id="localAnswer" name="localAnswer" rows="10" cols="100"></textarea>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-primary" id="answerSentBtn" data-dismiss="modal" aria-hidden="true">Okay, det er sendt.</button>
-  </div>
-</div>
+         #dr-div {
+             font-family: Publik;
+             font-weight: bold;
+             font-size: medium;
+         }
+         description, drlink, guid, generator, lastbuilddate, language, docs, atom:link{
+             display: none;
+         }
+         item {
+             margin: 1em;
+             font-size: medium;
+         }
+         pubdate {
+             color: #FF001E;
+             margin-top: 0.1em;
+             font-size: small;
+         }
+         category {
+             font-weight: normal;
+             font-style: italic;
+             font-size: 10pt;
+         }
 
-<div class="modal" id="getRemoteOffer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-  <div class="modal-header">
-    <h3 id="myModalLabel">Indtast skærmens "tilbud"</h3>
-  </div>
-  <div class="modal-body">
-      Skærmen har sendt dig et "tilbud", som beskriver hvordan du forbinder til skærmen. Indsæt det her.
-      <br>
-    The person who created the room will send you an "offer" string -- paste it here.
-  <br/>
-  <textarea class="input-large" id="remoteOffer" name="remoteOffer" rows="10" cols="100"></textarea>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-primary" id="offerRecdBtn" data-dismiss="modal" aria-hidden="true">Okay</button>
-  </div>
-</div>
+         video {
+             border-style: solid;
+             border-width: 2px;
+             display: none;
+         }
 
-<div class="modal" id="getRemoteAnswer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-  <div class="modal-header">
-    <h3 id="myModalLabel">Indtast kameraets svar</h3>
-  </div>
-  <div class="modal-body">
-      Indtast det svar, som kameraet sendte tilbage.
-      <br>
-    Now paste in the "answer" that was sent back to you.
-  <br/>
-  <textarea class="input-large" id="remoteAnswer" name="remoteAnswer" rows="10" cols="100"></textarea>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-primary" id="answerRecdBtn" data-dismiss="modal" aria-hidden="true">Okay</button>
-  </div>
-</div>
+         #content {
+             display: flex;
+             flex-direction: row;
+         }
 
-<div class="modal" id="waitForConnection" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
-  <div class="modal-header">
-    <h3 id="myModalLabel">Venter på at forbinde</h3>
-  </div>
-  <div class="modal-body">
-    Denne besked forsvinder når der er opnået en forbindelse.
-  </div>
-  <div class="spinner" align="center">
-    <img src="img/spinner.gif"></img>
-  </div>
-</div>
+         .aspect-ratio {
+             position: relative;
+             overflow: hidden;
+             width: 100%;
+             padding-bottom: 56.25%;
+         }
+         .aspect-ratio iframe {
+             position: absolute;
+             top: 0;
+             left: 0;
+             bottom: 0;
+             right: 0;
+             width: 100%;
+             height: 100%
+         }
+        </style>
+    </head>
+    <body>
+        <!-- <a href="https://github.com/cjb/serverless-webrtc/"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png" alt="Fork me on GitHub"></a> -->
+        <div class="overst">
+            <ul>
+                <a class="current">SENESTE NYT</a>
+                <a>INDLAND</a>
+                <a>UDLAND</a>
+                <a>PENGE</a>
+                <a>POLITIK</a>
+                <a>REGIONALT</a>
+                <a>VEJRET</a>
+            </ul>
+            <div class="overskrift">
+                LIVE: Pressemøde om mordsagen
+            </div>
+            <div id="content">
+                <div id="videos" style="flex-grow: 4; padding-left: 10%; padding-right: 10%;">
+                    <div class="aspect-ratio">
+                        <iframe id="youtube" src="https://www.youtube.com/embed/live_stream?channel=UCLd6S6dZxikrdxRB3geRnUA" frameborder="0"></iframe>
+                    </div>
+                    <div id="localVideoDiv">
+                        <Video id="localVideo"></Video>
+                    </div>
+                    <div id="remoteVideoDiv">
+                        <Video id="remoteVideo"></Video>
+                    </div>
+                </div>
+                <div class="span4">
+                    <fieldset class="well hide">
+                        <p class="head muted">
+                            Serverless WebRTC chat demonstration.
+                        </p>
+                        <div class="text-info" id="chatlog" style="height:350px; overflow:auto;">
+                        </div>
+                    </fieldset>
+                    <form class="form-inline hide" onSubmit="return sendMessage()" action="">
+                        <input type="text" id="messageTextBox" placeholder="Type your message here">
+                        <button type="submit" id="sendMessageBtn" class="btn">Send message</button>
+                    </form>
+                    <input type="file" id="fileBtn" class="hide">
+                    <!-- <iframe src="https://www.dr.dk/nyheder"></iframe> -->
+                    <div id="dr-div"></div>
+                </div>
+            </div>
 
-<div class="modal" id="createOrJoin" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-header">
-      <h3 id="myModalLabel">Velkommen</h3>
-      Velkommen til pressemøde-siden. Først skal vi skabe forbindelse mellem "skærmen" og "kameraet".
-      <br>
-      "Skærmen" er den computer, der viser pressemødet på storskærm.
-      <br>
-      "Kameraet" er den telefon, der optager detektiverne, der præsenterer.
-      <br><br>
-      <b> Er du kamera eller skærm?</b>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-primary" id="joinBtn" data-dismiss="modal" aria-hidden="true">Kamera</button>
-    <button class="btn btn-primary" id="createBtn" data-dismiss="modal" aria-hidden="true">Skærm</button>
-  </div>
-</div>
+            <div class="modal" id="showLocalOffer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+                <div class="modal-header">
+                    <h3 id="myModalLabel">Forbind til kameraet</h3>
+                </div>
+                <div class="modal-body">
+                    Her er dit "tilbud" -- det fortæller kameraet hvordan det forbinder til dig. Send det hele til kameraet, f.eks. via facebook, reppio eller email.
+                    <br>
+                    NB: det kan tage op til et minut før tilbuddet kommer frem.
+                    <br>
+                    Mens du venter skal du gå til denne side:
+                    <a href="https://cors-anywhere.herokuapp.com/corsdemo">
+                        https://cors-anywhere.herokuapp.com/corsdemo
+                    </a>
+                    og trykke på knappen. Den giver os adgang til DR's nyhedsfeed.
+                    <br/>
+                    <textarea class="input-large" id="localOffer" name="localOffer" rows="10" cols="100"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="offerSentBtn" data-dismiss="modal" aria-hidden="true">Okay, det er sendt.</button>
+                </div>
+            </div>
 
-<script src="js/serverless-webrtc.js"></script>
-<script src="js/file-transfer.js"></script>
-</body>
+            <div class="modal" id="showLocalAnswer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+                <div class="modal-header">
+                    <h3 id="myModalLabel">Forbind til skærmen</h3>
+                </div>
+                <div class="modal-body">
+                    Her er dit "svar" -- det fortæller skærmen hvordan den forbinder til dig. Send det hele til skærmen, f.eks. via facebook, reppio eller email.
+                    <br>
+                    NB: det kan tage op til et minut før svaret kommer frem.
+                    <br>
+                    <textarea class="input-large" id="localAnswer" name="localAnswer" rows="10" cols="100"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="answerSentBtn" data-dismiss="modal" aria-hidden="true">Okay, det er sendt.</button>
+                </div>
+            </div>
+
+            <div class="modal" id="getRemoteOffer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+                <div class="modal-header">
+                    <h3 id="myModalLabel">Indtast skærmens "tilbud"</h3>
+                </div>
+                <div class="modal-body">
+                    Skærmen har sendt dig et "tilbud", som beskriver hvordan du forbinder til skærmen. Indsæt det her.
+                    <br>
+                    <textarea class="input-large" id="remoteOffer" name="remoteOffer" rows="10" cols="100"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="offerRecdBtn" data-dismiss="modal" aria-hidden="true">Okay</button>
+                </div>
+            </div>
+
+            <div class="modal" id="getRemoteAnswer" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+                <div class="modal-header">
+                    <h3 id="myModalLabel">Indtast kameraets svar</h3>
+                </div>
+                <div class="modal-body">
+                    Indtast det svar, som kameraet sendte tilbage.
+                    <br>
+                    <textarea class="input-large" id="remoteAnswer" name="remoteAnswer" rows="10" cols="100"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="answerRecdBtn" data-dismiss="modal" aria-hidden="true">Okay</button>
+                </div>
+            </div>
+
+            <div class="modal" id="waitForConnection" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" hidden>
+                <div class="modal-header">
+                    <h3 id="myModalLabel">Venter på at forbinde</h3>
+                </div>
+                <div class="modal-body">
+                    Denne besked forsvinder når der er opnået en forbindelse.
+                </div>
+                <div class="spinner" align="center">
+                    <img src="img/spinner.gif"></img>
+                </div>
+            </div>
+
+            <div class="modal hide" id="createOrJoin" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-header">
+                    <h3 id="myModalLabel">Velkommen</h3>
+                    Velkommen til pressemøde-siden. Først skal vi skabe forbindelse mellem "skærmen" og "kameraet".
+                    <br>
+                    "Skærmen" er den computer, der viser pressemødet på storskærm.
+                    <br>
+                    "Kameraet" er den telefon, der optager detektiverne, der præsenterer.
+                    <br><br>
+                    <b> Er du kamera eller skærm?</b>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="joinBtn" data-dismiss="modal" aria-hidden="true">Kamera</button>
+                    <button class="btn btn-primary" id="createBtn" data-dismiss="modal" aria-hidden="true">Skærm</button>
+                </div>
+            </div>
+
+            <script src="js/serverless-webrtc.js"></script>
+            <script src="js/file-transfer.js"></script>
+    </body>
+
+    <script>
+     var url = prompt("Hvad er linket til streamen?")
+     if (url != null) {
+         document.getElementById('youtube').src = url;
+     }
+    </script>
 </html>

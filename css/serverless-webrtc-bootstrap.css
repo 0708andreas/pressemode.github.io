@@ -2,6 +2,6 @@ textarea { resize:none; }
 
 video {
    width:100%;
-   max-width:500px;
+   /* max-width:500px; */
    height:auto;
 }

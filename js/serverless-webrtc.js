@@ -18,7 +18,10 @@ reattachMediaStream = function (to, from) {
   to.play()
 }
 
-var cfg = {'iceServers': [{urls: 'stun:23.21.150.121'}]},
+var cfg = {'iceServers': [{urls: 'stun:23.21.150.121'},
+                          {url: 'turn:relay.backups.cz',
+                           credential: 'webrtc',
+                           username: 'webrtc'}]},
   con = { 'optional': [{'DtlsSrtpKeyAgreement': true}] }
 
 /* THIS IS ALICE, THE CALLER/SENDER */
@@ -39,14 +42,29 @@ var sdpConstraints = {
     OfferToReceiveVideo: true
   }
 }
+$.get('https://www.tv2lorry.dk/rss', function(data) {
+// $.get('https://test.cors.workers.dev/?https://www.dr.dk/nyheder/service/feeds/allenyheder',
+  console.log(data)
+  data = new XMLSerializer().serializeToString(data.documentElement)
+  console.log(data)
+  data = data.replaceAll("<![CDATA[", "")
+  data = data.replaceAll("]]>", "")
+  data = data.replaceAll("title>", "drtitle>")
+  data = data.replaceAll("link>", "drlink>")
+  data = data.replaceAll("</item>", "</item><hr>")
+  data = data.replaceAll("TV 2 Lorry - RSS Feed", "")
+  console.log(data)
+  $('#dr-div').html(data)
+})
 
 $('#showLocalOffer').modal('hide')
 $('#getRemoteAnswer').modal('hide')
 $('#waitForConnection').modal('hide')
-$('#createOrJoin').modal('show')
+$('#createOrJoin').modal('hide')
+// $('#createOrJoin').modal('hide')
 
 $('#createBtn').click(function () {
-  document.getElementById('localVideo').style.display = "none";
+  document.getElementById('localVideoDiv').style.display = "none";
   $('#createOrJoin').modal('hide')
   $('#showLocalOffer').modal('show')
   $('#dr-div').load('http://www.dr.dk/nyheder #hydra-latest-news-page__sidebar')
@@ -54,7 +72,7 @@ $('#createBtn').click(function () {
 })
 
 $('#joinBtn').click(function () {
-  document.getElementById('remoteVideo').style.display = "none";
+  document.getElementById('remoteVideoDiv').style.display = "none";
   navigator.mediaDevices.getUserMedia({video: true, audio: true}).then(function (stream) {
     var video = document.getElementById('localVideo')
     video.srcObject = stream;
